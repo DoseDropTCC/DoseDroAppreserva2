@@ -77,11 +77,11 @@
   <div>
     <h3 style='color: #720C0C; margin-top: 25px;'>Medicamento 1:</h3>
     <input type='text' id='nome1' placeholder='Insira o nome'>
-    <input type='time' id='frequencia1'>
+    <input type='number' id='frequencia1' placeholder='Insira a frequencia'>
     <small>De quantas em quantas horas?</small>
     <input type='number' id='quantidade1' placeholder='Insira a quantidade'>
     <small>Quantos medicamentos por vez?</small>
-    <button onclick="atualizarMedicamento1()">Confirmar</button>
+    <button onclick='atualizarMedicamento1()'>Confirmar</button>
   </div>
 
   <hr>
@@ -89,11 +89,11 @@
   <div>
     <h3 style='color: #720C0C; margin-top: 25px;'>Medicamento 2:</h3>
     <input type='text' id='nome2' placeholder='Insira o nome'>
-    <input type='time' id='frequencia2'>
+    <input type='number' id='frequencia2' placeholder='Insira a frequencia'>
     <small>De quantas em quantas horas?</small>
     <input type='number' id='quantidade2' placeholder='Insira a quantidade'>
     <small>Quantos medicamentos por vez?</small>
-    <button onclick="atualizarMedicamento2()">Confirmar</button>
+    <button onclick='atualizarMedicamento2()'>Confirmar</button>
   </div>
 </section>
 
@@ -127,64 +127,98 @@
 
 <script>
   function atualizarMedicamento1() {
-    const nome = document.getElementById('nome1').value || '-';
-    const frequencia = document.getElementById('frequencia1').value || '-';
-    const quantidade = document.getElementById('quantidade1').value || '-';
-    document.getElementById('med1-nome').innerHTML = `<b>${nome}</b>`;
-    document.getElementById('med1-frequencia').innerHTML = `<b>${frequencia}</b>`;
-    document.getElementById('med1-quantidade').innerHTML = `<b>${quantidade}</b>`;
+    const nome = document.getElementById('nome1').value || '-'
+    const frequencia = document.getElementById('frequencia1').value || '-'
+    const quantidade = document.getElementById('quantidade1').value || '-'
+    document.getElementById('med1-nome').innerHTML = `<b>${nome}</b>`
+    document.getElementById('med1-frequencia').innerHTML = `<b>${frequencia}</b>`
+    document.getElementById('med1-quantidade').innerHTML = `<b>${quantidade}</b>`
   }
 
   function atualizarMedicamento2() {
-    const nome = document.getElementById('nome2').value || '-';
-    const frequencia = document.getElementById('frequencia2').value || '-';
-    const quantidade = document.getElementById('quantidade2').value || '-';
-    document.getElementById('med2-nome').innerHTML = `<b>${nome}</b>`;
-    document.getElementById('med2-frequencia').innerHTML = `<b>${frequencia}</b>`;
-    document.getElementById('med2-quantidade').innerHTML = `<b>${quantidade}</b>`;
+    const nome = document.getElementById('nome2').value || '-'
+    const frequencia = document.getElementById('frequencia2').value || '-'
+    const quantidade = document.getElementById('quantidade2').value || '-'
+    document.getElementById('med2-nome').innerHTML = `<b>${nome}</b>`
+    document.getElementById('med2-frequencia').innerHTML = `<b>${frequencia}</b>`
+    document.getElementById('med2-quantidade').innerHTML = `<b>${quantidade}</b>`
   }
 </script> 
- 
+
 <script>
-  let Socket;
+  let Socket
   
   function init() {
-    Socket = new WebSocket(`ws://${window.location.hostname}:81`);
+    Socket = new WebSocket(`ws://${window.location.hostname}:81`)
   
-    Socket.onopen = () => console.log("✅ Conectado ao WebSocket");
-    Socket.onerror = (err) => console.error("❌ Erro no WebSocket:", err);
+    Socket.onopen = () => {
+      console.log('WebSocket conectado')
+    }
+  
     Socket.onmessage = (message) => {
-      console.log("📥 Mensagem recebida:", message.data);
-    };
+      console.log('📥 Mensagem recebida:', message.data)
+      const section = document.querySelector('.info')
+      if (section) {
+        section.innerHTML = `<p>${message.data}</p>`
+      }
+    }
+  
+    Socket.onclose = () => {
+      console.warn('Conexão perdida. Tentando reconectar...')
+      setTimeout(init, 2000)
+    }
   }
   
-  // Envia apenas a frequência 1 (HH:MM)
   function enviarFrequencia1() {
-    const frequencia1 = document.getElementById('frequencia1').value;
-  
-    if (frequencia1 && Socket.readyState === WebSocket.OPEN) {
-      Socket.send(`frequencia1:${frequencia1}`);
-      console.log(`📤 Enviado -> frequencia1:${frequencia1}`);
-    } else {
-      console.warn("⚠️ WebSocket não conectado ou frequência 1 inválida");
-    }
-  }
-  
-  // Envia apenas a frequência 2 (HH:MM)
-  function enviarFrequencia2() {
-    const frequencia2 = document.getElementById('frequencia2').value;
-  
-    if (frequencia2 && Socket.readyState === WebSocket.OPEN) {
-      Socket.send(`frequencia2:${frequencia2}`);
-      console.log(`📤 Enviado -> frequencia2:${frequencia2}`);
-    } else {
-      console.warn("⚠️ WebSocket não conectado ou frequência 2 inválida");
-    }
-  }
-  
-  init();
-  </script>
+    const nome = document.getElementById('nome1').value || '-'
+    const frequencia = document.getElementById('frequencia1').value || '-'
+    const quantidade = document.getElementById('quantidade1').value || '-'
     
+    if (Socket && Socket.readyState === WebSocket.OPEN) {
+      const msg = `med1|nome:${nome}|frequencia:${frequencia}|quantidade:${quantidade}`
+      Socket.send(msg)
+      console.log('Enviado ->', msg)
+    } else {
+      console.warn('WebSocket não conectado')
+    }
+  }
+  
+  function enviarFrequencia2() {
+    const nome = document.getElementById('nome2').value || '-'
+    const frequencia = document.getElementById('frequencia2').value || '-'
+    const quantidade = document.getElementById('quantidade2').value || '-'
+    
+    if (Socket && Socket.readyState === WebSocket.OPEN) {
+      const msg = `med2|nome:${nome}|frequencia:${frequencia}|quantidade:${quantidade}`
+      Socket.send(msg)
+      console.log('Enviado ->', msg)
+    } else {
+      console.warn('WebSocket não conectado')
+    }
+  }
+  
+  function atualizarMedicamento1() {
+    const nome = document.getElementById('nome1').value || '-'
+    const frequencia = document.getElementById('frequencia1').value || '-'
+    const quantidade = document.getElementById('quantidade1').value || '-'
+    document.getElementById('med1-nome').innerHTML = `<b>${nome}</b>`
+    document.getElementById('med1-frequencia').innerHTML = `<b>${frequencia}</b>`
+    document.getElementById('med1-quantidade').innerHTML = `<b>${quantidade}</b>`
+    enviarFrequencia1()
+  }
+  
+  function atualizarMedicamento2() {
+    const nome = document.getElementById('nome2').value || '-'
+    const frequencia = document.getElementById('frequencia2').value || '-'
+    const quantidade = document.getElementById('quantidade2').value || '-'
+    document.getElementById('med2-nome').innerHTML = `<b>${nome}</b>`
+    document.getElementById('med2-frequencia').innerHTML = `<b>${frequencia}</b>`
+    document.getElementById('med2-quantidade').innerHTML = `<b>${quantidade}</b>`
+    enviarFrequencia2()
+  }
+  
+  init()
+</script>
 
 </body>
 </html>
